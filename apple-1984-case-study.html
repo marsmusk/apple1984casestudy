@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apple 1984 — A Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRSy3EBCxmlo7ZGbO5iuu0yXBTNd1O1B7LqQ&s">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Suisse+Int%27l:wght@300;400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --black: #080808;
+    --white: #f4f0eb;
+    --red: #c0392b;
+    --mid: #1a1a1a;
+    --gray: #888;
+    --light-gray: #2a2a2a;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --mono: 'DM Mono', monospace;
+    --body: 'Libre Baskerville', Georgia, serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--body);
+    font-weight: 400;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.35;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--red);
+    width: 0%;
+    z-index: 1000;
+    transition: width 0.1s linear;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 4rem;
+    mix-blend-mode: normal;
+  }
+
+  nav::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.9), transparent);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--gray);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--white); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 4rem 5rem;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/1200px-Camponotus_flavomarginatus_ant.jpg') center/cover;
+    filter: grayscale(100%) brightness(0.25);
+    z-index: 0;
+  }
+
+  /* Use a proper image — we overlay from the ad */
+  .hero-img-real {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Apple-1984-ad.jpg/1200px-Apple-1984-ad.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    filter: grayscale(100%) brightness(0.22) contrast(1.2);
+    z-index: 0;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(8,8,8,1) 0%,
+      rgba(8,8,8,0.6) 50%,
+      rgba(8,8,8,0.1) 100%
+    );
+    z-index: 1;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.3s;
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(4rem, 10vw, 9rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 1.2s ease forwards 0.5s;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--white);
+  }
+
+  .hero-title span {
+    color: var(--red);
+  }
+
+  .hero-sub {
+    font-family: var(--body);
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.6;
+    color: rgba(244,240,235,0.6);
+    max-width: 540px;
+    opacity: 0;
+    animation: fadeUp 1.2s ease forwards 0.8s;
+  }
+
+  .hero-meta {
+    position: absolute;
+    bottom: 5rem;
+    right: 4rem;
+    z-index: 2;
+    text-align: right;
+    opacity: 0;
+    animation: fadeIn 1.5s ease forwards 1.2s;
+  }
+
+  .hero-meta p {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--gray);
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeIn 2s ease forwards 1.5s;
+  }
+
+  .scroll-hint span {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--gray), transparent);
+    animation: scrollPulse 2s ease infinite;
+  }
+
+  /* ── SECTIONS COMMON ── */
+  section {
+    padding: 7rem 4rem;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-label::after {
+    content: '';
+    display: block;
+    height: 1px;
+    width: 60px;
+    background: var(--red);
+    opacity: 0.4;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin-bottom: 2.5rem;
+  }
+
+  h2 em { font-style: italic; }
+
+  h3 {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: rgba(244,240,235,0.75);
+    margin-bottom: 1.25rem;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 0;
+  }
+
+  /* ── INTRO SECTION ── */
+  .intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: start;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .intro-stat-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 3rem;
+  }
+
+  .stat-item {
+    background: var(--mid);
+    padding: 2rem;
+  }
+
+  .stat-number {
+    font-family: var(--serif);
+    font-size: 2.8rem;
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  /* ── FULL-BLEED IMAGE ── */
+  .full-image {
+    width: 100%;
+    height: 70vh;
+    object-fit: cover;
+    filter: grayscale(90%) brightness(0.7) contrast(1.1);
+    display: block;
+  }
+
+  .image-caption {
+    background: var(--mid);
+    padding: 1rem 4rem;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  /* ── CONTEXT SECTION ── */
+  .context-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: 4rem;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .context-sidebar {
+    padding-top: 0.25rem;
+  }
+
+  /* ── TIMELINE ── */
+  .timeline {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 120px 1px 1fr;
+    gap: 2rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: start;
+    transition: background 0.3s;
+  }
+
+  .timeline-item:last-child { border-bottom: none; }
+
+  .timeline-year {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--gray);
+    padding-top: 0.15rem;
+    transition: color 0.3s;
+  }
+
+  .timeline-line {
+    width: 1px;
+    background: rgba(255,255,255,0.1);
+    align-self: stretch;
+    position: relative;
+  }
+
+  .timeline-line::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: -3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  .timeline-item:hover .timeline-year { color: var(--white); }
+
+  /* ── PULLQUOTE ── */
+  .pullquote-section {
+    background: var(--mid);
+    padding: 8rem 4rem;
+  }
+
+  blockquote {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  blockquote p {
+    font-family: var(--serif);
+    font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.35;
+    color: var(--white);
+    margin-bottom: 2rem;
+  }
+
+  blockquote cite {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--gray);
+    text-transform: uppercase;
+    font-style: normal;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  blockquote cite::before {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 1px;
+    background: var(--red);
+  }
+
+  /* ── TWO-COL TEXT ── */
+  .two-col {
+    columns: 2;
+    column-gap: 4rem;
+  }
+
+  .two-col p { break-inside: avoid; }
+
+  /* ── IMAGE GRID ── */
+  .image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+    max-width: 1300px;
+    margin: 0 auto 3rem;
+  }
+
+  .image-grid-item {
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .image-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(80%) brightness(0.65) contrast(1.1);
+    transition: filter 0.5s, transform 0.5s;
+    display: block;
+  }
+
+  .image-grid-item:hover img {
+    filter: grayscale(30%) brightness(0.8) contrast(1.1);
+    transform: scale(1.03);
+  }
+
+  /* ── KEY FIGURES ── */
+  .figures-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .figure-card {
+    background: var(--mid);
+    padding: 2.5rem;
+    border-top: 2px solid transparent;
+    transition: border-color 0.3s;
+  }
+
+  .figure-card:hover {
+    border-top-color: var(--red);
+  }
+
+  .figure-role {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .figure-name {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+  }
+
+  .figure-desc {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: rgba(244,240,235,0.6);
+    margin-bottom: 0;
+  }
+
+  /* ── RED ACCENT SECTION ── */
+  .accent-section {
+    background: var(--red);
+    padding: 6rem 4rem;
+  }
+
+  .accent-section h2 {
+    color: var(--white);
+  }
+
+  .accent-section p {
+    color: rgba(255,255,255,0.8);
+  }
+
+  .accent-inner {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  /* ── LEGACY LIST ── */
+  .legacy-list {
+    max-width: 1300px;
+    margin: 0 auto;
+    counter-reset: legacy;
+  }
+
+  .legacy-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 2rem;
+    padding: 3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    counter-increment: legacy;
+  }
+
+  .legacy-number {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--gray);
+    padding-top: 0.1rem;
+  }
+
+  .legacy-number::before {
+    content: counter(legacy, decimal-leading-zero);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--red);
+  }
+
+  /* ── SOURCES ── */
+  .sources-section {
+    background: var(--mid);
+  }
+
+  .sources-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    margin-top: 3rem;
+    max-width: 1100px;
+  }
+
+  .source-item {
+    background: rgba(255,255,255,0.02);
+    padding: 1.25rem 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    color: var(--gray);
+    border-left: 1px solid rgba(255,255,255,0.05);
+    transition: color 0.3s, background 0.3s;
+    line-height: 1.6;
+  }
+
+  .source-item:hover {
+    color: var(--white);
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .footer-left h4 {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--gray);
+    margin-bottom: 0.3rem;
+  }
+
+  .footer-left p {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: rgba(136,136,136,0.5);
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .footer-right {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: rgba(136,136,136,0.4);
+    text-align: right;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; transform: scaleY(1); }
+    50%       { opacity: 1;   transform: scaleY(1.3); }
+  }
+
+  /* ── REVEAL ON SCROLL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    section { padding: 5rem 2rem; }
+    nav { padding: 1.5rem 2rem; }
+    .hero { padding: 0 2rem 4rem; }
+    .intro { grid-template-columns: 1fr; gap: 3rem; }
+    .context-grid { grid-template-columns: 1fr; }
+    .figures-grid { grid-template-columns: 1fr; }
+    .two-col { columns: 1; }
+    .accent-inner { grid-template-columns: 1fr; gap: 2rem; }
+    .sources-grid { grid-template-columns: 1fr; }
+    .image-grid { grid-template-columns: 1fr 1fr; }
+    .nav-links { display: none; }
+    footer { flex-direction: column; gap: 2rem; align-items: flex-start; }
+    .intro-stat-block { grid-template-columns: 1fr 1fr; }
+    .image-caption { padding: 1rem 2rem; }
+    .hero-meta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav>
+  <div class="nav-logo">Apple 1984 — Case Study</div>
+  <ul class="nav-links">
+    <li><a href="#context">Context</a></li>
+    <li><a href="#making">The Making</a></li>
+    <li><a href="#impact">Impact</a></li>
+    <li><a href="#legacy">Legacy</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-img-real"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">A Case Study by Siddhanta Ghosh</p>
+    <h1 class="hero-title">
+      <em>On the</em> Day<br>
+      That Changed<br>
+      <span>Advertising.</span>
+    </h1>
+    <p class="hero-sub">
+      How a 60-second commercial aired once during the Super Bowl became the most consequential advertisement in history — and redefined what brands could say, do, and mean.
+    </p>
+  </div>
+
+  <div class="hero-meta">
+    <p>January 22, 1984</p>
+    <p>Super Bowl XVIII</p>
+    <p>Directed by Ridley Scott</p>
+    <p>Agency: Chiat\Day</p>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── INTRO ── -->
+<section id="context">
+  <div class="intro">
+    <div>
+      <p class="section-label">01 — Overview</p>
+      <h2>The Ad That<br><em>Broke the Rules</em></h2>
+      <p>On January 22, 1984, during the third quarter of Super Bowl XVIII, Apple Computer aired a single, 60-second television commercial directed by <em>Blade Runner</em> filmmaker Ridley Scott. It never once showed the product it was advertising. It aired only once nationally. And it is widely considered the greatest advertisement ever made.</p>
+      <p>The commercial, conceived by Lee Clow and Steve Hayden at the agency Chiat\Day, depicted a dystopian world of grey conformity — directly referencing George Orwell's novel <em>Nineteen Eighty-Four</em> — shattered by a lone woman hurling a sledgehammer through a screen broadcasting Big Brother. A final title card read: "On January 24th, Apple Computer will introduce Macintosh. And you'll see why 1984 won't be like <em>1984</em>."</p>
+      <p>No product shot. No price. No feature list. Just a myth, a mission, and a moment.</p>
+    </div>
+
+    <div>
+      <div class="intro-stat-block reveal">
+        <div class="stat-item">
+          <span class="stat-number">$1.6M</span>
+          <span class="stat-label">Production cost</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">60s</span>
+          <span class="stat-label">Duration aired</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">96.6M</span>
+          <span class="stat-label">Super Bowl viewers</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" style="color: var(--red)">1×</span>
+          <span class="stat-label">Times aired nationally</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 2px;">
+        <div class="stat-item reveal" style="background: var(--mid)">
+          <span class="stat-number" style="font-size: 1.6rem;">$3.5M+ earned</span>
+          <span class="stat-label">In free press coverage within 24 hours</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ── FULL IMAGE ── -->
+<img
+  src="https://thecommspot.com/wp-content/uploads/2025/09/Apple-1984-Marketing-Case-Study-1320x743.png"
+  alt="Still from Apple's 1984 commercial"
+  class="full-image"
+>
+<div class="image-caption">Still from Apple's "1984" commercial — Directed by Ridley Scott, January 1984</div>
+
+<!-- ── CONTEXT ── -->
+<section style="background: var(--mid);">
+  <div class="context-grid">
+    <div class="context-sidebar reveal">
+      <p class="section-label">02 — Context</p>
+    </div>
+    <div class="reveal">
+      <h2>A World<br>Ruled by <em>Blue</em></h2>
+      <p>To understand why 1984 hit like a detonation, you have to understand the world Apple was entering. IBM — nicknamed "Big Blue" — had released its Personal Computer in 1981 and by 1983 commanded over 75% of the corporate PC market. The tech industry had converged around a single dominant paradigm: beige boxes, command lines, and institutional conformity.</p>
+      <p>Apple, meanwhile, was a company in crisis. The Apple III had flopped. The Lisa, at $9,995, was commercially disastrous. The board had hired professional management. Steve Jobs had been marginalised from the Lisa project. The Macintosh — a machine Jobs had commandeered as his redemption project — was behind schedule and over budget.</p>
+      <p>The commercial was not just an advertisement for a computer. It was a declaration of war against a world Jobs believed was being led toward a singular, stifling mediocrity. IBM was Big Brother. Apple was the runner. And the sledgehammer was the Mac.</p>
+    </div>
+    <div class="reveal">
+      <h2>Orwell's<br><em>Shadow</em></h2>
+      <p>The borrowed mythology was unmistakeable. George Orwell's 1949 novel depicted a totalitarian future defined by surveillance, doublethink, and the annihilation of individual thought. Apple weaponised that imagery and applied it to corporate technology — specifically to IBM.</p>
+      <p>This was audacious to the point of legal and reputational risk. The Orwell estate was consulted. The IBM comparison was plausibly deniable but unmistakeable to anyone who watched. What the ad achieved was something advertising had never quite done before: it positioned a product not by what it did, but by what kind of world it stood against.</p>
+      <p>The runner — athlete Anya Major — was not a user. She was a symbol: colour in a grey world, motion in a frozen one, individuality against the collective. The Mac was the sledgehammer. You, the viewer, were invited to be the runner.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── PULLQUOTE ── -->
+<section class="pullquote-section">
+  <blockquote class="reveal">
+    <p>"It was the finest two minutes of film I had ever seen. I was blown away. I thought, this is it. This is what we've been trying to do."</p>
+    <cite>Steve Jobs, on first viewing the completed commercial</cite>
+  </blockquote>
+</section>
+
+<!-- ── MAKING ── -->
+<section id="making">
+  <p class="section-label">03 — The Making</p>
+  <h2 class="reveal" style="max-width: 800px; margin: 0 auto 4rem 0;">From Concept<br>to <em>Super Bowl</em></h2>
+
+  <div class="timeline reveal">
+
+    <div class="timeline-item">
+      <div class="timeline-year">1982</div>
+      <div class="timeline-line"></div>
+      <div>
+        <h3>The Brief is Written</h3>
+        <p>Copywriter Steve Hayden at Chiat\Day writes the first draft of the "1984" concept, framing Apple's mission as an antidote to technological totalitarianism. Creative director Lee Clow champions the idea internally. The concept: Apple versus IBM, rendered in cinematic Orwellian terms. The tagline writes itself.</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-year">Mid-1983</div>
+      <div class="timeline-line"></div>
+      <div>
+        <h3>Ridley Scott is Hired</h3>
+        <p>Coming off <em>Blade Runner</em> (1982) and <em>Alien</em> (1979), Ridley Scott was the only director whose visual vocabulary could realise the ad's dystopian ambition. His production design sensibility — grimy industrialism, chiaroscuro light, mass choreography — turned a 60-second commercial into a short film. Scott shot the ad at Shepperton Studios in England with 200 skinhead extras recruited from local punk clubs.</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-year">Dec 1983</div>
+      <div class="timeline-line"></div>
+      <div>
+        <h3>Apple's Board Nearly Kills It</h3>
+        <p>When Apple's board of directors screened the finished commercial, their reaction was not admiration. It was alarm. Several members demanded that Chiat\Day sell back the Super Bowl airtime. John Sculley was uncertain. Steve Jobs, however, was immovable. A compromise was reached: Chiat\Day was asked to sell back one of the two slots purchased. Their media buyer "forgot" to sell the 60-second slot — and history was made by deliberate incompetence.</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-year">Jan 1984</div>
+      <div class="timeline-line"></div>
+      <div>
+        <h3>A Preview in 25 Cities</h3>
+        <p>Before the Super Bowl airing, Chiat\Day arranged for the ad to run as late-night local TV spots in 25 markets in December 1983 and early January 1984 — specifically so it would qualify for the upcoming Clio Awards. This strategic move meant that by Super Bowl Sunday, a small number of journalists and ad industry insiders had already seen it, priming the media response that would follow.</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-year">Jan 22, 1984</div>
+      <div class="timeline-line"></div>
+      <div>
+        <h3>Super Bowl XVIII</h3>
+        <p>The commercial aired during the third quarter of Super Bowl XVIII, between the Los Angeles Raiders and the Washington Redskins. Within hours, every major US television news programme ran the ad as a news story in its own right. The next morning's newspapers covered it. By the following week, an estimated 5 billion media impressions had been generated from a single airing. Apple never needed to run it again.</p>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-year">Jan 24, 1984</div>
+      <div class="timeline-line"></div>
+      <div>
+        <h3>The Mac is Introduced</h3>
+        <p>Two days after the Super Bowl, Steve Jobs pulled the Macintosh from a canvas bag at the Flint Auditorium in Cupertino. The machine introduced itself: "Hello." The audience erupted. In the first 74 days after launch, Apple sold 72,000 Macintoshes, far exceeding initial projections. The advertisement had created a hunger the product was now required to satisfy.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── IMAGE GRID ── -->
+<div class="image-grid reveal">
+  <div class="image-grid-item">
+    <img src="https://i.ytimg.com/vi/CMyeEL_lEXc/maxresdefault.jpg" alt="1984 commercial still">
+  </div>
+  <div class="image-grid-item">
+    <img src="https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/14602643/steve-jobs-macintosh.1419980282.jpg?quality=90&strip=all&crop=0.36945812807881%2C0%2C99.261083743842%2C100&w=1080" alt="Steve Jobs with Macintosh 1984">
+  </div>
+  <div class="image-grid-item">
+    <img src="https://computerhistory.org/wp-content/uploads/2023/11/MacintoshGroup-1024x1024.jpg" alt="Original Macintosh 128k" style="background:#111; object-fit: contain; padding: 2rem;">
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── KEY FIGURES ── -->
+<section>
+  <p class="section-label">04 — The Architects</p>
+  <h2 class="reveal">The People<br><em>Behind the Myth</em></h2>
+
+  <div class="figures-grid reveal">
+    <div class="figure-card">
+      <div class="figure-role">Apple Co-Founder & CEO</div>
+      <div class="figure-name">Steve Jobs</div>
+      <p class="figure-desc">Jobs was the ad's most fervent internal champion. He saw in the "1984" concept an expression of Apple's founding ideology: that technology should liberate rather than constrain. His willingness to override board objections — and the creative intimacy he maintained with Chiat\Day — made the ad possible. Without Jobs, the Apple board would have pulled it.</p>
+    </div>
+    <div class="figure-card">
+      <div class="figure-role">Creative Director, Chiat\Day</div>
+      <div class="figure-name">Lee Clow</div>
+      <p class="figure-desc">Lee Clow was the creative soul of the ad. His vision — that advertising could be as culturally ambitious as cinema — shaped the brief and the execution. Clow would go on to shepherd Apple's advertising for two more decades, including the "Think Different" campaign of 1997. He understood that Apple's brand was a belief system, not a product line.</p>
+    </div>
+    <div class="figure-card">
+      <div class="figure-role">Copywriter, Chiat\Day</div>
+      <div class="figure-name">Steve Hayden</div>
+      <p class="figure-desc">Hayden wrote the words that framed everything: "On January 24th, Apple Computer will introduce Macintosh. And you'll see why 1984 won't be like <em>1984</em>." Eleven words of body copy that contained a worldview. His conceptual instinct — to borrow Orwell's metaphor and turn it against IBM — was the foundational creative leap.</p>
+    </div>
+    <div class="figure-card">
+      <div class="figure-role">Director</div>
+      <div class="figure-name">Ridley Scott</div>
+      <p class="figure-desc">Scott brought the cinematic ambition that elevated the concept from clever to visceral. His production design — hundreds of shaven-headed drones, industrial fog, a lone woman in colour — gave the ad its emotional and visual power. Shot at Shepperton Studios, the production rivalled feature films of its era in scale and craft.</p>
+    </div>
+    <div class="figure-card">
+      <div class="figure-role">Marketing Strategist</div>
+      <div class="figure-name">Regis McKenna</div>
+      <p class="figure-desc">The architect of Apple's early marketing philosophy, McKenna counselled Jobs on positioning Apple not as a technology company but as a cultural force. His influence shaped the strategic logic underneath "1984": that Apple's greatest marketing asset was not specifications but story — and that story was revolution.</p>
+    </div>
+    <div class="figure-card">
+      <div class="figure-role">Apple CEO</div>
+      <div class="figure-name">John Sculley</div>
+      <p class="figure-desc">Sculley's role is a study in ambivalence. Initially sceptical of the ad, he was ultimately persuaded by Jobs and allowed it to proceed. His later accounts of the decision are revealing: he understood the ad was remarkable but feared the risk. That tension — between institutional caution and visionary audacity — is a permanent lesson in creative leadership.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── RED ACCENT ── -->
+<section class="accent-section" id="impact">
+  <div class="accent-inner">
+    <div class="reveal">
+      <p class="section-label" style="color: rgba(255,255,255,0.6)">05 — Impact</p>
+      <h2 style="color: #fff;">The<br><em>Aftermath</em></h2>
+      <p>The commercial generated an estimated $150 million in Macintosh sales in the 74 days following its broadcast. Apple sold out its initial production run almost immediately. More significantly, the ad created a new category of consumer expectation: that buying a computer was a statement of identity and values, not merely a functional decision.</p>
+      <p>Television news networks replayed the ad in their entirety as news segments — granting Apple billions of earned media impressions at no additional cost. It was among the first modern examples of content designed to be covered by media rather than merely consumed by audiences.</p>
+    </div>
+    <div class="reveal">
+      <p>The advertising industry itself was transformed. "1984" established the Super Bowl as a cultural platform for brand storytelling, a tradition that continues four decades later. It pioneered what would become known as "event advertising" — the notion that a single commercial could function as a cultural moment worthy of discussion, debate, and replay.</p>
+      <p>In 1995, <em>Advertising Age</em> named "1984" the greatest commercial of all time. In 1999, it was named the Commercial of the Century. No advertisement before or since has achieved the same ratio of airings to cultural impact. It ran once. It changed everything.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECOND PULLQUOTE ── -->
+<section class="pullquote-section" style="background: var(--black);">
+  <blockquote class="reveal">
+    <p>"We're gambling on our vision, and we would rather do that than make 'me too' products. Let some other companies do that. For us, it's always the next dream."</p>
+    <cite>Steve Jobs, 1984</cite>
+  </blockquote>
+</section>
+
+<!-- ── LEGACY ── -->
+<section id="legacy" style="background: var(--mid);">
+  <p class="section-label">06 — Legacy & Lessons</p>
+  <h2 class="reveal" style="max-width: 700px; margin-bottom: 4rem;">What the World<br><em>Learned</em> from 1984</h2>
+
+  <div class="legacy-list">
+    <div class="legacy-item reveal">
+      <div class="legacy-number"></div>
+      <div>
+        <h3>Brands are Belief Systems</h3>
+        <p>"1984" proved that the most powerful brands do not describe their products — they embody a worldview. Apple did not say the Mac was fast, easy, or affordable. It said the Mac stood on one side of a civilisational argument. Every subsequent Apple campaign — "Think Different," "Here's to the Crazy Ones," "Shot on iPhone" — has operated from this same foundation. The product is the proof. The myth is the brand.</p>
+      </div>
+    </div>
+
+    <div class="legacy-item reveal">
+      <div class="legacy-number"></div>
+      <div>
+        <h3>Advertising Can Be a Cultural Event</h3>
+        <p>Before 1984, advertising aspired to reach audiences. After 1984, the most ambitious advertising aspired to <em>become</em> the audience's conversation. The mechanism — making content so surprising, provocative, or beautiful that media covers it as news — is now the standard ambition of every major brand campaign. "1984" was the first to achieve this at scale, and it did so in 1984, a decade before the internet made viral content a concept.</p>
+      </div>
+    </div>
+
+    <div class="legacy-item reveal">
+      <div class="legacy-number"></div>
+      <div>
+        <h3>Risk is a Creative Strategy</h3>
+        <p>Apple's board wanted to pull the ad. The instinct toward safety — toward conventional product advertising — was powerful and rational. Jobs' willingness to override that instinct was not mere stubbornness. It reflected an understanding that in saturated markets, safe advertising is invisible advertising. The asymmetry of risk and reward favours boldness: the downside of running a great ad that confuses some viewers is recoverable; the downside of never making an impression at all is permanent.</p>
+      </div>
+    </div>
+
+    <div class="legacy-item reveal">
+      <div class="legacy-number"></div>
+      <div>
+        <h3>The Enemy Clarifies the Hero</h3>
+        <p>Positioning against IBM — making a competitor the villain of your origin story — was a rhetorical stroke of genius. The "enemy" gave the "1984" narrative its dramatic engine. Without Big Brother, there is no runner, no sledgehammer, no liberation. The lesson is structural: the clearest way to define what you stand for is to name what you stand against. Apple has returned to this adversarial positioning in almost every major campaign since, including its famous "Mac vs. PC" television ads of 2006–2009.</p>
+      </div>
+    </div>
+
+    <div class="legacy-item reveal">
+      <div class="legacy-number"></div>
+      <div>
+        <h3>Authenticity Requires Commitment</h3>
+        <p>The ad's power depended entirely on Apple's willingness to follow through — to release a product that substantiated the myth. Had the Macintosh been a mediocre machine, "1984" would have been remembered as hubris. The integration of product vision and brand vision — Jobs' insistence that the Mac's design embody the same values the ad expressed — is the most enduring strategic lesson. Great advertising creates expectation. Only great products redeem it.</p>
+      </div>
+    </div>
+
+    <div class="legacy-item reveal">
+      <div class="legacy-number"></div>
+      <div>
+        <h3>The Ad as Political Text</h3>
+        <p>Forty years on, scholars continue to debate what "1984" actually meant — and what it has come to mean. The ad promised liberation through technology, and in 1984, that promise felt revolutionary. In an era of surveillance capitalism, algorithmic control, and Apple's own market dominance, the irony has not escaped critics: the company that once cast itself as the rebel against Big Brother is now one of the largest corporations in human history. The ad survives partly as a document of its own ambiguity — a monument to both the power and the limits of brand mythology.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL IMAGE ── -->
+<img
+  src="https://photos5.appleinsider.com/gallery/0-91862-Steve-Jobs-1984-xl.jpg"
+  alt="Steve Jobs with the original Macintosh, January 1984"
+  class="full-image"
+  style="height: 85vh;"
+>
+<div class="image-caption">Steve Jobs with the original Macintosh at its unveiling, Cupertino, January, 1984</div>
+
+<!-- ── SOURCES ── -->
+<section class="sources-section" id="sources">
+  <p class="section-label">07 — Sources</p>
+  <h2 class="reveal">References &<br><em>Further Reading</em></h2>
+  <div class="sources-grid reveal">
+    <div class="source-item">#071: Apple 1984 Ad — Most Impactful Commercials of All Time<br><span style="opacity:0.5">The Empire Builders Podcast</span></div>
+    <div class="source-item">1984 (advertisement)<br><span style="opacity:0.5">Wikipedia</span></div>
+    <div class="source-item">1984 Apple Macintosh Super Bowl Commercial Case Study<br><span style="opacity:0.5">Various academic sources</span></div>
+    <div class="source-item">Apple 1984 Super Bowl Ad<br><span style="opacity:0.5">MM Marketing Mind</span></div>
+    <div class="source-item">Apple's '1984': The Super Bowl Ad That Revolutionised Advertising and Branding<br><span style="opacity:0.5">Phable</span></div>
+    <div class="source-item">Apple's 1984, Digital Utopianism and the Hyper-opticon<br><span style="opacity:0.5">Academic paper</span></div>
+    <div class="source-item">Apple's First Marketing Guru on Why '1984' Is Overrated<br><span style="opacity:0.5">Ad Age</span></div>
+    <div class="source-item">Forty Years Later: Lessons from Apple's 1984<br><span style="opacity:0.5">Industry analysis</span></div>
+    <div class="source-item">From One 1984 to the Next: On Apple's "1984" and the Political Fault Lines it Represents<br><span style="opacity:0.5">Cultural criticism</span></div>
+    <div class="source-item">Great Moments In Advertising: The 1984 Apple Spot<br><span style="opacity:0.5">Branding Strategy Insider</span></div>
+    <div class="source-item">HISTORY's Moment in Media: The "1984" Apple Ad That Changed Tech Advertising<br><span style="opacity:0.5">History Channel</span></div>
+    <div class="source-item">How Apple Nearly Chickened Out and Came Close to Not Airing the Legendary "1984" Ad<br><span style="opacity:0.5">Industry reporting</span></div>
+    <div class="source-item">How Apple's "1984" Macintosh Reveal Changed Advertising<br><span style="opacity:0.5">InsideHook</span></div>
+    <div class="source-item">Marketing of Apple Inc.<br><span style="opacity:0.5">Wikipedia</span></div>
+    <div class="source-item">Real-Time With the Father of Real-Time: Regis McKenna<br><span style="opacity:0.5">MediaPost</span></div>
+    <div class="source-item">Regis McKenna and Strategic Marketing<br><span style="opacity:0.5">Business strategy analysis</span></div>
+    <div class="source-item">Remembering Apple's "1984" Super Bowl Ad<br><span style="opacity:0.5">Lemelson Center</span></div>
+    <div class="source-item">TBWA\Chiat\Day<br><span style="opacity:0.5">Encyclopedia.com</span></div>
+    <div class="source-item">The '1984' Macintosh Ad: Cinematic Icons and Constitutive Rhetoric<br><span style="opacity:0.5">ResearchGate</span></div>
+    <div class="source-item">The Architect of Cultural Identity: A Comprehensive Analysis of the Apple '1984' Campaign<br><span style="opacity:0.5">Marketing analysis</span></div>
+    <div class="source-item">The Real Story of Apple's 'Think Different' Campaign<br><span style="opacity:0.5">Branding Strategy Insider</span></div>
+    <div class="source-item">The Revolutionary Impact of Apple's 1984 Commercial<br><span style="opacity:0.5">PapersOwl</span></div>
+    <div class="source-item">The Story Behind Apple's 1984 Ad<br><span style="opacity:0.5">Low End Mac</span></div>
+    <div class="source-item">One Identity, Two Storylines: The Evolution of Apple's Organisational Identity<br><span style="opacity:0.5">Academic paper</span></div>
+    <div class="source-item">Influential Advertising Campaigns to Know<br><span style="opacity:0.5">Fiveable</span></div>
+    <div class="source-item">That Old Apple Marketing 'Blueprint'<br><span style="opacity:0.5">Reddit / community analysis</span></div>
+    <div class="source-item">Anthropic Tears into ChatGPT with New Anti-Ad Ad<br><span style="opacity:0.5">AdGuard — contemporary context</span></div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-left">
+    <h4>Apple 1984 — A Case Study</h4>
+    <p>Research & Writing by Siddhanta Ghosh</p>
+  </div>
+  <div class="footer-right">
+    <p>All images used under fair use / Creative Commons</p>
+    <p style="margin-top: 0.5rem; color: var(--red); opacity: 0.7;">A CASE STUDY BY : SIDDHANTA GHOSH</p>
+  </div>
+</footer>
+
+<script>
+  // ── PROGRESS BAR ──
+  const progress = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    progress.style.width = pct + '%';
+  });
+
+  // ── SCROLL REVEAL ──
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // ── STAGGER CHILDREN ──
+  document.querySelectorAll('.figures-grid, .intro-stat-block, .sources-grid').forEach(grid => {
+    const children = grid.children;
+    Array.from(children).forEach((child, i) => {
+      child.style.transitionDelay = (i * 0.07) + 's';
+    });
+  });
+
+  // ── HERO PARALLAX ──
+  const heroBg = document.querySelector('.hero-img-real');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (heroBg && y < window.innerHeight) {
+      heroBg.style.transform = `translateY(${y * 0.3}px)`;
+    }
+  });
+</script>
+</body>
+</html>
